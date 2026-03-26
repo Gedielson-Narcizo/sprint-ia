@@ -51,7 +51,9 @@ O dashboard controla:
   ],
   dailyLog: { "2026-03-30": true },
   dailyChecklist: { "2026-03-30": { aulas: true, caderno: true } },
+  dayCompleted: { "2026-03-30": false },
   lessonsAddedPerDay: { "2026-03-30": 2 },
+  cycleLessonsAddedPerDay: { "2026-03-30": 2 },
   annotations: [
     {
       id: "abc123",
@@ -93,6 +95,18 @@ O dashboard controla:
 - **Nao alterar a chave** em mudancas visuais ou refatoracoes sem quebra
 - **So incrementar a chave** quando houver mudanca breaking no shape do estado salvo
 - **Migracoes** devem continuar sendo tratadas em `load()`
+
+### Campos de ciclo diario
+
+- `lessonsAddedPerDay`
+  - acumulado total de aulas registradas no dia
+  - alimenta progresso agregado e resumo do dia
+- `cycleLessonsAddedPerDay`
+  - registra apenas as aulas do ciclo atual do checklist
+  - permite desfazer somente a rodada mais recente sem apagar o acumulado anterior do dia
+- `dayCompleted`
+  - mantido por compatibilidade de estado salvo
+  - nao e mais o gatilho principal do fluxo de ciclos
 
 ---
 
@@ -203,6 +217,8 @@ Implementacoes recentes ja incorporadas:
 - tabs do header ocultas em desktop quando sidebar esta ativa
 - hero superior com saudacao, contexto do sprint e bloco `Foco de hoje`
 - a acao de reset saiu do topo e foi movida para o rodape da sidebar
+- checklist do dia com estado de conclusao premium e CTA de continuidade
+- fluxo de ciclos no checklist para repetir rodadas ate concluir as aulas da formacao
 
 ### Regras visuais
 
@@ -232,10 +248,27 @@ Implementacoes recentes ja incorporadas:
 - Ao confirmar:
   - incrementa `completedLessons`
   - registra `dailyLog`
-  - salva `lessonsAddedPerDay`
+  - incrementa `lessonsAddedPerDay`
+  - atualiza `cycleLessonsAddedPerDay` com a rodada atual
 - Ao desfazer:
-  - subtrai o valor salvo no dia
+  - subtrai apenas o valor da rodada atual
+  - preserva o acumulado previamente consolidado no mesmo dia
 - Os demais itens do checklist nao alteram roadmap
+
+### Ciclos do checklist diario
+
+- O checklist pode ser concluido mais de uma vez no mesmo dia enquanto houver aulas restantes na formacao ativa
+- Ao concluir um ciclo e clicar em `Continuar para a proxima entrega`:
+  - o checklist visual e limpo
+  - o acumulado do dia e preservado em `lessonsAddedPerDay`
+  - o valor desfazivel da rodada e zerado em `cycleLessonsAddedPerDay`
+  - o primeiro item volta exatamente ao layout rico original
+- No novo ciclo:
+  - a pergunta `Quantas aulas?` reaparece
+  - o stepper `- / quantidade / +` reaparece
+  - a confirmacao de registro volta a funcionar normalmente
+- O bloco de conclusao reaparece ao final de cada novo ciclo
+- O fluxo se repete ate a formacao ativa atingir `totalLessons`
 
 ### Sincronizacao Kanban <-> Roadmap
 
@@ -347,7 +380,7 @@ Implementacoes recentes ja incorporadas:
 
 ### Estado atual
 
-- Ultima release organizada para remoto: `v1.4.0`
+- Ultima release organizada para remoto: `v1.5.0`
 - A chave de storage continua `sprint-ia-v13`
 
 ---
@@ -363,4 +396,4 @@ Implementacoes recentes ja incorporadas:
 
 ---
 
-*INSTRUCTIONS.md v1.1 - Sprint IA - Solaris Energia*
+*INSTRUCTIONS.md v1.2 - Sprint IA - Solaris Energia*

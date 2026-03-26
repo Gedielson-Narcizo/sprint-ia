@@ -28,11 +28,11 @@ function makeInit() {
     cards.push({ id: `a-${cid++}`, title: `Formação: ${week.formation}`, type: "estudo", priority: "alta", column: week.status === "active" ? "esta_semana" : "backlog", week: week.week, auto: true, formation: week.formation, description: "" });
     cards.push({ id: `a-${cid++}`, title: `Entrega S${week.week}: ${week.delivery}`, type: "entrega", priority: "alta", column: "backlog", week: week.week, auto: true, formation: week.formation, description: "" });
   }));
-  return { phases: JSON.parse(JSON.stringify(PHASES_INIT)), startDate: "2026-03-30", dailyLog: {}, dailyChecklist: {}, lessonsAddedPerDay: {}, annotations: [], kanbanCards: cards, kanbanIdCounter: cid };
+  return { phases: JSON.parse(JSON.stringify(PHASES_INIT)), startDate: "2026-03-30", dailyLog: {}, dailyChecklist: {}, dayCompleted: {}, lessonsAddedPerDay: {}, cycleLessonsAddedPerDay: {}, annotations: [], kanbanCards: cards, kanbanIdCounter: cid };
 }
 
 const SK = "sprint-ia-v13";
-const load = () => { try { const raw = localStorage.getItem(SK); if (raw) { const data = JSON.parse(raw); if (!data.annotations) data.annotations = []; if (!data.lessonsAddedPerDay) data.lessonsAddedPerDay = {}; return data; } } catch {} return makeInit(); };
+const load = () => { try { const raw = localStorage.getItem(SK); if (raw) { const data = JSON.parse(raw); if (!data.annotations) data.annotations = []; if (!data.lessonsAddedPerDay) data.lessonsAddedPerDay = {}; if (!data.cycleLessonsAddedPerDay) data.cycleLessonsAddedPerDay = {}; if (!data.dayCompleted) data.dayCompleted = {}; return data; } } catch {} return makeInit(); };
 const save = (data) => { try { localStorage.setItem(SK, JSON.stringify(data)); } catch {} };
 const td = () => new Date().toISOString().slice(0, 10);
 const now = () => new Date().toISOString();
@@ -79,6 +79,7 @@ export default function SprintIA() {
   const todayChecks = data.dailyChecklist[td()] || {};
   const todayLogged = !!data.dailyLog[td()];
   const lessonsAddedToday = data.lessonsAddedPerDay?.[td()] || 0;
+  const currentCycleLessonsToday = data.cycleLessonsAddedPerDay?.[td()] || 0;
 
   const toggleCheck = (id) => setData((prev) => {
     const dailyChecklist = { ...prev.dailyChecklist };
@@ -95,7 +96,9 @@ export default function SprintIA() {
       for (const phase of next.phases) for (const week of phase.weeks) if (week.formation === activeWeek.formation) { week.completedLessons = Math.min(week.totalLessons, week.completedLessons + lessonsToday); break; }
       next.dailyLog[td()] = true;
       if (!next.lessonsAddedPerDay) next.lessonsAddedPerDay = {};
+      if (!next.cycleLessonsAddedPerDay) next.cycleLessonsAddedPerDay = {};
       next.lessonsAddedPerDay[td()] = (next.lessonsAddedPerDay[td()] || 0) + lessonsToday;
+      next.cycleLessonsAddedPerDay[td()] = lessonsToday;
       const dailyChecklist = { ...(next.dailyChecklist[td()] || {}) };
       dailyChecklist.aulas = true;
       next.dailyChecklist[td()] = dailyChecklist;
@@ -105,20 +108,22 @@ export default function SprintIA() {
   }, [activeWeek, lessonsToday]);
 
   const undoLessons = useCallback(() => {
-    if (!activeWeek || lessonsAddedToday <= 0) return;
+    if (!activeWeek || currentCycleLessonsToday <= 0) return;
     setData((prev) => {
       const next = JSON.parse(JSON.stringify(prev));
-      for (const phase of next.phases) for (const week of phase.weeks) if (week.formation === activeWeek.formation) { week.completedLessons = Math.max(0, week.completedLessons - lessonsAddedToday); break; }
+      for (const phase of next.phases) for (const week of phase.weeks) if (week.formation === activeWeek.formation) { week.completedLessons = Math.max(0, week.completedLessons - currentCycleLessonsToday); break; }
       if (!next.lessonsAddedPerDay) next.lessonsAddedPerDay = {};
-      next.lessonsAddedPerDay[td()] = 0;
+      if (!next.cycleLessonsAddedPerDay) next.cycleLessonsAddedPerDay = {};
+      next.lessonsAddedPerDay[td()] = Math.max(0, (next.lessonsAddedPerDay[td()] || 0) - currentCycleLessonsToday);
+      next.cycleLessonsAddedPerDay[td()] = 0;
       const dailyChecklist = { ...(next.dailyChecklist[td()] || {}) };
       dailyChecklist.aulas = false;
       next.dailyChecklist[td()] = dailyChecklist;
       const otherChecks = Object.entries(dailyChecklist).filter(([key, value]) => key !== "aulas" && value);
-      if (otherChecks.length === 0) delete next.dailyLog[td()];
+      if (otherChecks.length === 0 && (next.lessonsAddedPerDay[td()] || 0) === 0) delete next.dailyLog[td()];
       return syncProgressState(next);
     });
-  }, [activeWeek, lessonsAddedToday]);
+  }, [activeWeek, currentCycleLessonsToday]);
 
   const checkItems = useMemo(() => !activeWeek ? [] : [
     { id: "aulas", label: `Assistir aulas de ${activeWeek.formation}`, time: "1h15", hasLessons: true },
@@ -128,6 +133,32 @@ export default function SprintIA() {
   ], [activeWeek]);
 
   const allChecked = checkItems.length > 0 && checkItems.every((item) => todayChecks[item.id]);
+
+  const continueNextDelivery = useCallback((targetTab = "today") => {
+    const dayKey = td();
+
+    setData((prev) => {
+      const next = {
+        ...prev,
+        dailyChecklist: { ...prev.dailyChecklist },
+        cycleLessonsAddedPerDay: { ...(prev.cycleLessonsAddedPerDay || {}) },
+        dayCompleted: { ...(prev.dayCompleted || {}) },
+      };
+      next.dailyChecklist[dayKey] = {};
+      next.cycleLessonsAddedPerDay[dayKey] = 0;
+      next.dayCompleted[dayKey] = false;
+      return next;
+    });
+
+    setConfirmLesson(false);
+
+    if (activeWeek) {
+      const remainingLessons = activeWeek.totalLessons - activeWeek.completedLessons;
+      setLessonsToday(remainingLessons > 0 ? Math.min(activeWeek.dailyTarget, remainingLessons) : 0);
+    }
+
+    setTab(targetTab);
+  }, [activeWeek]);
 
   const saveAnnotation = useCallback(() => {
     if (!noteText.trim()) return;
@@ -213,6 +244,7 @@ export default function SprintIA() {
             setLessonsToday={setLessonsToday}
             doRegisterLessons={doRegisterLessons}
             lessonsAddedToday={lessonsAddedToday}
+            currentCycleLessonsToday={currentCycleLessonsToday}
             toggleCheck={toggleCheck}
             manualCards={manualCards}
             noteTargetType={noteTargetType}
@@ -225,6 +257,11 @@ export default function SprintIA() {
             noteSaved={noteSaved}
             saveAnnotation={saveAnnotation}
             annotationsTodayCount={data.annotations.filter((annotation) => annotation.date === td()).length}
+            streak={streak}
+            overallPct={overallPct}
+            doneL={doneL}
+            totalL={totalL}
+            onContinueNextDelivery={continueNextDelivery}
           />
         ) : null}
         {tab === "kanban" ? (
