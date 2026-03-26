@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import "./src/styles/sprint-ia.css";
 import CardDetail from "./src/components/sprint-ia/CardDetail.jsx";
 import HeaderBar from "./src/components/sprint-ia/HeaderBar.jsx";
+import Sidebar from "./src/components/sprint-ia/Sidebar.jsx";
 import KanbanView from "./src/components/sprint-ia/KanbanView.jsx";
 import RoadmapView from "./src/components/sprint-ia/RoadmapView.jsx";
 import StatsView from "./src/components/sprint-ia/StatsView.jsx";
@@ -148,10 +149,8 @@ export default function SprintIA() {
   const addCard = useCallback(({ title, type, priority, formation, description }) => setData((prev) => ({ ...prev, kanbanIdCounter: prev.kanbanIdCounter + 1, kanbanCards: [...prev.kanbanCards, { id: `m-${prev.kanbanIdCounter}`, title, type, priority, column: "backlog", auto: false, formation: formation || undefined, description: description || "" }] })), []);
   const updateCard = useCallback((id, updates) => { setData((prev) => ({ ...prev, kanbanCards: prev.kanbanCards.map((card) => card.id === id ? { ...card, ...updates } : card) })); setSelectedCard((prev) => prev?.id === id ? { ...prev, ...updates } : prev); }, []);
   const avgPD = useMemo(() => { const entries = Object.keys(data.dailyLog).length; return entries > 0 ? doneL / entries : 2; }, [data.dailyLog, doneL]);
-  const tabs = [{ id: "roadmap", label: "Roadmap", icon: <Ic.Chart /> }, { id: "today", label: "Hoje", icon: <Ic.Calendar /> }, { id: "kanban", label: "Kanban", icon: <Ic.Kanban /> }, { id: "stats", label: "Métricas", icon: <Ic.Target /> }];
-
   return (
-    <div className="sia-app">
+    <div className="sia-app sia-app--with-sidebar">
       {selectedCard ? (
         <CardDetail
           card={selectedCard}
@@ -167,22 +166,32 @@ export default function SprintIA() {
         />
       ) : null}
 
+      <Sidebar tab={tab} setTab={setTab} streak={streak} todayLogged={todayLogged} showReset={showReset} setShowReset={setShowReset} />
+
+      <div className="sia-main">
       <HeaderBar
         streak={streak}
         todayLogged={todayLogged}
         nextDelivery={nextDelivery}
+        activeWeek={activeWeek}
+        overallPct={overallPct}
         showReset={showReset}
         setShowReset={setShowReset}
         resetAll={() => {
-          setData(makeInit());
-          setShowReset(false);
-        }}
-        tabs={tabs}
-        tab={tab}
-        setTab={setTab}
-      />
+            setData(makeInit());
+            setShowReset(false);
+          }}
+          tabs={[
+            { id: "roadmap", label: "Roadmap", icon: <Ic.Chart /> },
+            { id: "today", label: "Hoje", icon: <Ic.Calendar /> },
+            { id: "kanban", label: "Kanban", icon: <Ic.Kanban /> },
+            { id: "stats", label: "Métricas", icon: <Ic.Target /> },
+          ]}
+          tab={tab}
+          setTab={setTab}
+        />
 
-      <main className="sia-shell">
+        <main className="sia-shell">
         <section className="sia-stats-grid">
           <StatCard icon={<Ic.Chart />} label="Progresso" value={`${overallPct}%`} sub={`${doneL}/${totalL} aulas`} accent="#7fe6c6" />
           <StatCard icon={<Ic.Trophy />} label="Entregas" value={`${doneDeliveries}/${allWeeks.length}`} accent="#8bb6ff" />
@@ -245,7 +254,8 @@ export default function SprintIA() {
           </span>
           <span>v1.3</span>
         </footer>
-      </main>
+        </main>
+      </div>
     </div>
   );
 }

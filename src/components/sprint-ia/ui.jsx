@@ -131,6 +131,37 @@ export const Ic = {
       <path d="M2 8a6 6 0 1011.47-2.5M14 2v4h-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   ),
+  Palette: () => (
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+      <path d="M8 1a7 7 0 000 14c1 0 1.5-.5 1.5-1.5 0-.4-.15-.75-.4-1-.25-.26-.4-.6-.4-1A1.5 1.5 0 0110.2 10h1.3A4.5 4.5 0 0016 5.5 7 7 0 008 1z" stroke="currentColor" strokeWidth="1.2" />
+      <circle cx="5" cy="5.5" r="1" fill="currentColor" />
+      <circle cx="8" cy="4" r="1" fill="currentColor" />
+      <circle cx="11" cy="5.5" r="1" fill="currentColor" />
+      <circle cx="4.5" cy="8.5" r="1" fill="currentColor" />
+    </svg>
+  ),
+  Brain: () => (
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+      <path d="M8 14V8M8 8C8 5 6 3 4.5 3A2.5 2.5 0 002 5.5c0 1 .5 1.8 1 2.3M8 8c0-3 2-5 3.5-5A2.5 2.5 0 0114 5.5c0 1-.5 1.8-1 2.3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+      <path d="M3 7.8A2.5 2.5 0 002 10c0 1.5 1.5 3 3 3h1M13 7.8A2.5 2.5 0 0114 10c0 1.5-1.5 3-3 3h-1" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+    </svg>
+  ),
+  Bulb: () => (
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+      <path d="M6 13h4M6.5 14h3M8 1a5 5 0 00-2 9.6V12h4v-1.4A5 5 0 008 1z" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  ),
+  Build: () => (
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+      <path d="M9.5 1.5L14.5 6.5L6.5 14.5H1.5V9.5L9.5 1.5z" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M8 4l4 4" stroke="currentColor" strokeWidth="1.2" />
+    </svg>
+  ),
+  Menu: () => (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+      <path d="M2 4h12M2 8h12M2 12h12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  ),
 };
 
 export function Pill({ children, bg, fg }) {

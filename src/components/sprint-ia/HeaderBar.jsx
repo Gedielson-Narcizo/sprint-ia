@@ -1,6 +1,30 @@
-import { Btn, Ic } from "./ui.jsx";
+import { Btn, Ic, Pill } from "./ui.jsx";
 
-export default function HeaderBar({ streak, todayLogged, nextDelivery, showReset, setShowReset, resetAll, tabs, tab, setTab }) {
+export default function HeaderBar({
+  streak,
+  todayLogged,
+  nextDelivery,
+  activeWeek,
+  overallPct,
+  showReset,
+  setShowReset,
+  resetAll,
+  tabs,
+  tab,
+  setTab,
+}) {
+  const sprintMoment = activeWeek
+    ? `Semana ${activeWeek.week} em andamento · ${activeWeek.formation}`
+    : nextDelivery
+      ? `Sprint em andamento · foco na semana ${nextDelivery.week}`
+      : "Sprint concluído · entregas principais finalizadas";
+
+  const focusTitle = nextDelivery ? `S${nextDelivery.week} — ${nextDelivery.delivery}` : "Tudo em dia para o próximo passo";
+  const focusSupport = nextDelivery
+    ? "Mantenha o ritmo de estudo e avance na entrega visível para a liderança."
+    : "Revise o roadmap, consolide aprendizados e prepare o próximo ciclo com calma.";
+  const primaryTab = activeWeek ? "today" : "roadmap";
+
   return (
     <header className="sia-header">
       <div className="sia-header__inner">
@@ -25,21 +49,45 @@ export default function HeaderBar({ streak, todayLogged, nextDelivery, showReset
                 <Ic.Check s={12} /> Hoje ✓
               </div>
             ) : null}
-            <button type="button" className="sia-icon-button" onClick={() => setShowReset(!showReset)}>
-              <Ic.Reset />
-            </button>
           </div>
         </div>
 
-        {nextDelivery ? (
-          <div className="sia-header__target">
-            <Ic.Target />
-            <span>Próxima entrega:</span>
-            <strong>
-              S{nextDelivery.week} — {nextDelivery.delivery}
-            </strong>
+        <section className="sia-top-hero surface-card">
+          <div className="sia-top-hero__context">
+            <div className="sia-top-hero__eyebrow">Painel de comando</div>
+            <h2 className="sia-top-hero__title">Bom trabalho, Gedielson.</h2>
+            <p className="sia-top-hero__subtitle">
+              Acompanhe o sprint com clareza, mantenha o foco do dia visível e avance com consistência.
+            </p>
+            <div className="sia-top-hero__meta">
+              <Pill bg="rgba(139, 182, 255, 0.14)" fg="#8bb6ff">
+                {overallPct}% concluído
+              </Pill>
+              <span className="sia-top-hero__moment">{sprintMoment}</span>
+            </div>
           </div>
-        ) : null}
+
+          <div className="sia-focus-card">
+            <div className="sia-focus-card__kicker">
+              <Ic.Target />
+              <span>Foco de hoje</span>
+            </div>
+            <div className="sia-focus-card__title">{focusTitle}</div>
+            <p className="sia-focus-card__text">{focusSupport}</p>
+
+            <div className="sia-focus-card__actions">
+              <Btn v="primary" onClick={() => setTab(primaryTab)} sx={{ minWidth: 150 }}>
+                Continuar agora
+              </Btn>
+              <Btn v="ghost" onClick={() => setTab("roadmap")}>
+                Ver roadmap
+              </Btn>
+              <Btn v="ghost" onClick={() => setTab("kanban")}>
+                Abrir kanban
+              </Btn>
+            </div>
+          </div>
+        </section>
 
         {showReset ? (
           <div className="sia-reset-banner">
@@ -57,7 +105,12 @@ export default function HeaderBar({ streak, todayLogged, nextDelivery, showReset
 
         <div className="sia-tabs">
           {tabs.map((item) => (
-            <button key={item.id} type="button" className={`sia-tab ${tab === item.id ? "is-active" : ""}`.trim()} onClick={() => setTab(item.id)}>
+            <button
+              key={item.id}
+              type="button"
+              className={`sia-tab ${tab === item.id ? "is-active" : ""}`.trim()}
+              onClick={() => setTab(item.id)}
+            >
               {item.icon}
               {item.label}
             </button>

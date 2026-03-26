@@ -3,16 +3,16 @@
 :root {
   --sia-bg: #07111f;
   --sia-bg-top: #0b1527;
-  --sia-surface: linear-gradient(180deg, rgba(18, 28, 49, 0.96) 0%, rgba(10, 18, 33, 0.96) 100%);
+  --sia-surface: linear-gradient(180deg, rgba(22, 34, 58, 0.97) 0%, rgba(12, 20, 36, 0.97) 100%);
   --sia-surface-plain: #0d1729;
-  --sia-border: rgba(125, 151, 192, 0.16);
+  --sia-border: rgba(125, 151, 192, 0.22);
   --sia-border-strong: rgba(159, 177, 202, 0.24);
   --sia-text: #f5f7fb;
   --sia-text-soft: #d4dfef;
   --sia-text-muted: #9fb1ca;
   --sia-text-faint: #6f86a8;
   --sia-shadow: 0 18px 44px -28px rgba(0, 0, 0, 0.92);
-  --sia-shadow-soft: 0 10px 30px -22px rgba(0, 0, 0, 0.9);
+  --sia-shadow-soft: 0 10px 30px -22px rgba(0, 0, 0, 0.9), 0 2px 8px rgba(0, 0, 0, 0.25);
   --sia-radius-md: 16px;
 }
 
@@ -140,7 +140,9 @@ textarea::placeholder {
 .sia-chip-row,
 .sia-week-card__badges,
 .sia-kanban-card__badges,
-.sia-inline-actions {
+.sia-inline-actions,
+.sia-focus-card__actions,
+.sia-top-hero__meta {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
@@ -207,6 +209,105 @@ textarea::placeholder {
 .sia-icon-ghost:hover {
   border-color: var(--sia-border-strong);
   background: rgba(24, 35, 56, 0.92);
+}
+
+.sia-top-hero {
+  margin-top: 16px;
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(320px, 0.85fr);
+  gap: 14px;
+  padding: 14px 16px;
+  background:
+    radial-gradient(circle at top left, rgba(139, 182, 255, 0.16), transparent 34%),
+    linear-gradient(135deg, rgba(12, 21, 36, 0.96) 0%, rgba(8, 15, 28, 0.98) 100%);
+  border-color: rgba(137, 181, 255, 0.14);
+  box-shadow: 0 22px 48px -30px rgba(0, 0, 0, 0.9);
+}
+
+.sia-top-hero__context {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+}
+
+.sia-top-hero__eyebrow {
+  margin-bottom: 6px;
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #8bb6ff;
+}
+
+.sia-top-hero__title {
+  margin: 0;
+  font-family: "Outfit", sans-serif;
+  font-size: clamp(1.4rem, 2.3vw, 1.95rem);
+  font-weight: 700;
+  line-height: 1.06;
+  letter-spacing: -0.04em;
+}
+
+.sia-top-hero__subtitle {
+  margin: 8px 0 0;
+  max-width: 52ch;
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--sia-text-muted);
+}
+
+.sia-top-hero__meta {
+  align-items: center;
+  margin-top: 10px;
+  gap: 10px;
+}
+
+.sia-top-hero__moment {
+  font-size: 11px;
+  color: var(--sia-text-soft);
+}
+
+.sia-focus-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 9px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  background:
+    linear-gradient(180deg, rgba(16, 31, 30, 0.78) 0%, rgba(10, 20, 29, 0.88) 100%);
+  border: 1px solid rgba(127, 230, 198, 0.12);
+  box-shadow: inset 0 0 0 1px rgba(127, 230, 198, 0.04);
+}
+
+.sia-focus-card__kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #7fe6c6;
+}
+
+.sia-focus-card__title {
+  font-family: "Outfit", sans-serif;
+  font-size: clamp(1.1rem, 1.55vw, 1.45rem);
+  font-weight: 700;
+  line-height: 1.18;
+  color: var(--sia-text);
+}
+
+.sia-focus-card__text {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--sia-text-muted);
+}
+
+.sia-focus-card__actions {
+  margin-top: 2px;
+  gap: 6px;
 }
 
 .sia-header__target,
@@ -390,8 +491,15 @@ textarea::placeholder {
   padding: 18px;
   border-radius: var(--sia-radius-md);
   border: 1px solid var(--sia-border);
+  border-bottom: 2px solid color-mix(in srgb, var(--phase-color) 50%, transparent);
   background: var(--sia-surface);
   box-shadow: var(--sia-shadow-soft);
+  transition: border-color 0.18s ease, transform 0.18s ease;
+}
+
+.sia-week-card:hover {
+  border-color: color-mix(in srgb, var(--phase-color) 35%, rgba(125, 151, 192, 0.22));
+  border-bottom-color: color-mix(in srgb, var(--phase-color) 60%, transparent);
 }
 
 .sia-week-card--done {
@@ -1176,6 +1284,209 @@ textarea::placeholder {
   background: #7fe6c6;
 }
 
+/* ═══════════════════════════════════════════════════
+   SIDEBAR
+   ═══════════════════════════════════════════════════ */
+
+.sia-app--with-sidebar {
+  display: flex;
+  min-height: 100vh;
+}
+
+.sia-main {
+  flex: 1;
+  min-width: 0;
+  overflow-x: hidden;
+}
+
+.sia-sidebar {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  width: 220px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  background: #0B1120;
+  border-right: 1px solid #1E293B;
+  overflow-y: auto;
+  z-index: 10;
+}
+
+.sia-sidebar__brand {
+  padding: 24px 18px 18px;
+  border-bottom: 1px solid #1E293B;
+}
+
+.sia-sidebar__title {
+  margin: 0;
+  font-family: "Outfit", sans-serif;
+  font-size: 1.15rem;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  color: var(--sia-text);
+}
+
+.sia-sidebar__title strong {
+  display: block;
+  margin-top: 2px;
+  background: linear-gradient(135deg, #8bb6ff 0%, #82f7dc 48%, #f5c56e 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.sia-sidebar__subtitle {
+  margin-top: 6px;
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #64748B;
+}
+
+.sia-sidebar__status {
+  display: flex;
+  gap: 6px;
+  padding: 12px 18px;
+  border-bottom: 1px solid #1E293B;
+}
+
+.sia-sidebar__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.sia-sidebar__badge--streak {
+  background: rgba(245, 200, 110, 0.12);
+  color: #f5c56e;
+}
+
+.sia-sidebar__badge--done {
+  background: rgba(127, 230, 198, 0.12);
+  color: #7fe6c6;
+}
+
+.sia-sidebar__nav {
+  flex: 1;
+  padding: 8px 0;
+}
+
+.sia-sidebar__section {
+  padding: 4px 0;
+}
+
+.sia-sidebar__section-label {
+  padding: 10px 18px 6px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #64748B;
+}
+
+.sia-sidebar__item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 18px;
+  border: none;
+  border-left: 3px solid transparent;
+  background: transparent;
+  color: #94A3B8;
+  font-family: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.sia-sidebar__item:hover:not(.is-disabled) {
+  background: rgba(148, 163, 184, 0.06);
+  color: #F8FAFC;
+}
+
+.sia-sidebar__item.is-active {
+  background: linear-gradient(90deg, rgba(124, 58, 237, 0.12), rgba(56, 189, 248, 0.08));
+  border-left-color: #7C3AED;
+  color: #F8FAFC;
+}
+
+.sia-sidebar__item.is-disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.sia-sidebar__item-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  flex-shrink: 0;
+}
+
+.sia-sidebar__item-label {
+  flex: 1;
+  text-align: left;
+}
+
+.sia-sidebar__soon {
+  font-size: 8px;
+  padding: 2px 5px;
+  border-radius: 4px;
+  background: rgba(148, 163, 184, 0.08);
+  color: #64748B;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.sia-sidebar__footer {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 14px 18px;
+  border-top: 1px solid #1E293B;
+  font-size: 9px;
+  color: #64748B;
+}
+
+.sia-sidebar__reset {
+  width: 100%;
+  justify-content: flex-start;
+  padding-left: 12px;
+  padding-right: 12px;
+}
+
+/* Hide tabs from header when sidebar is present */
+.sia-app--with-sidebar .sia-tabs {
+  display: none;
+}
+
+/* Hide sidebar brand info since sidebar has it */
+.sia-app--with-sidebar .sia-brand {
+  display: none;
+}
+
+/* Responsive: hide sidebar on small screens, show tabs */
+@media (max-width: 900px) {
+  .sia-sidebar {
+    display: none;
+  }
+
+  .sia-app--with-sidebar .sia-tabs {
+    display: flex;
+  }
+
+  .sia-app--with-sidebar .sia-brand {
+    display: block;
+  }
+}
+
 @keyframes siaFadeIn {
   from {
     opacity: 0;
@@ -1191,6 +1502,10 @@ textarea::placeholder {
 @media (max-width: 1100px) {
   .sia-stats-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .sia-top-hero {
+    grid-template-columns: 1fr;
   }
 
   .sia-stats-panel-grid {
@@ -1218,6 +1533,10 @@ textarea::placeholder {
   .sia-checklist__header {
     align-items: stretch;
   }
+
+  .sia-top-hero {
+    padding: 18px;
+  }
 }
 
 @media (max-width: 640px) {
@@ -1238,6 +1557,16 @@ textarea::placeholder {
   .sia-progress-summary,
   .sia-checklist__row {
     align-items: flex-start;
+  }
+
+  .sia-top-hero__meta,
+  .sia-focus-card__actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .sia-focus-card {
+    padding: 16px;
   }
 
   .sia-footnote {
