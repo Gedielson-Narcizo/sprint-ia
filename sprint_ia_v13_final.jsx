@@ -38,8 +38,7 @@ const now = () => new Date().toISOString();
 const uid = () => Math.random().toString(36).slice(2, 10);
 
 export default function SprintIA({ onLogout, userId }) {
-  const [data, setData] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [data, setData] = useState(makeInit); // estado válido desde o início
   const [tab, setTab] = useState("roadmap");
   const [showNewCard, setShowNewCard] = useState(false);
   const [showReset, setShowReset] = useState(false);
@@ -51,31 +50,23 @@ export default function SprintIA({ onLogout, userId }) {
   const [confirmLesson, setConfirmLesson] = useState(false);
   const [noteTargetType, setNoteTargetType] = useState("formation");
 
-  // Carrega dados ao montar (Supabase → localStorage → makeInit)
+  // Carrega dados do Supabase e substitui o estado inicial quando chegar
+  const initialized = useRef(false);
   useEffect(() => {
     loadState(userId).then((loaded) => {
-      setData(loaded ?? makeInit());
-      setIsLoading(false);
+      if (loaded) setData(loaded);
+      initialized.current = true;
     });
   }, [userId]);
 
-  // Salva no Supabase com debounce de 1.5s para evitar excesso de chamadas
+  // Salva no Supabase com debounce de 1.5s — apenas após carga inicial
   const saveTimer = useRef(null);
   useEffect(() => {
-    if (isLoading || !data) return;
+    if (!initialized.current) return;
     clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(() => saveState(userId, data), 1500);
     return () => clearTimeout(saveTimer.current);
-  }, [data, userId, isLoading]);
-
-  // Tela de loading enquanto busca do Supabase
-  if (isLoading || !data) {
-    return (
-      <div style={{ minHeight: "100vh", background: "#0a0f1e", display: "flex", alignItems: "center", justifyContent: "center", color: "#94a3b8", fontFamily: "'Inter', system-ui, sans-serif", fontSize: "13px" }}>
-        Carregando dados...
-      </div>
-    );
-  }
+  }, [data, userId]);
 
   const allWeeks = useMemo(() => data.phases.flatMap((phase) => phase.weeks), [data.phases]);
   const allFormations = useMemo(() => allWeeks.map((week) => week.formation), [allWeeks]);
