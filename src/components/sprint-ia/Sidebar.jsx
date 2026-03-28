@@ -27,7 +27,7 @@ const SECTIONS = [
   },
 ];
 
-export default function Sidebar({ tab, setTab, streak, todayLogged, showReset, setShowReset }) {
+export default function Sidebar({ tab, setTab, streak, todayLogged, showReset, setShowReset, onLogout }) {
   return (
     <aside className="sia-sidebar">
       <div className="sia-sidebar__brand">
@@ -81,6 +81,11 @@ export default function Sidebar({ tab, setTab, streak, todayLogged, showReset, s
         >
           <Ic.Reset /> Resetar progresso
         </Btn>
+        {onLogout ? (
+          <Btn v="ghost" onClick={onLogout} className="sia-sidebar__reset">
+            <Ic.Logout /> Sair
+          </Btn>
+        ) : null}
         <span>Sprint IA · Solaris Energia</span>
       </div>
     </aside>

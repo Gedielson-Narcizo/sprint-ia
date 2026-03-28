@@ -38,7 +38,7 @@ const td = () => new Date().toISOString().slice(0, 10);
 const now = () => new Date().toISOString();
 const uid = () => Math.random().toString(36).slice(2, 10);
 
-export default function SprintIA() {
+export default function SprintIA({ onLogout }) {
   const [data, setData] = useState(load);
   const [tab, setTab] = useState("roadmap");
   const [showNewCard, setShowNewCard] = useState(false);
@@ -197,7 +197,7 @@ export default function SprintIA() {
         />
       ) : null}
 
-      <Sidebar tab={tab} setTab={setTab} streak={streak} todayLogged={todayLogged} showReset={showReset} setShowReset={setShowReset} />
+      <Sidebar tab={tab} setTab={setTab} streak={streak} todayLogged={todayLogged} showReset={showReset} setShowReset={setShowReset} onLogout={onLogout} />
 
       <div className="sia-main">
       <HeaderBar
