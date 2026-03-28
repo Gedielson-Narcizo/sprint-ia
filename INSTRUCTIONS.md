@@ -122,9 +122,11 @@ src/main.jsx -> ../sprint_ia_v13_final.jsx
 
 Observacoes importantes:
 - `src/App.jsx` existe, mas e apenas o template padrao do Vite e **nao** e a tela principal em uso
+- `src/App.css`, `src/index.css`, `src/assets/*` e parte de `public/*` pertencem ao template/base do projeto e nao definem o shell principal do dashboard
 - o container principal do dashboard esta em `sprint_ia_v13_final.jsx`
 - a UI foi refatorada para componentes em `src/components/sprint-ia`
 - os estilos principais vivem em `src/styles/sprint-ia.css`
+- os arquivos `setup-notion.js`, `fix-notion.js` e `notion_api_setup.md` sao auxiliares e nao participam do runtime do frontend
 
 ### Estrutura atual relevante
 
@@ -133,7 +135,9 @@ sprint-ia/
 |-- src/
 |   |-- main.jsx
 |   |-- App.jsx                  <- template Vite, nao usado no runtime atual
+|   |-- App.css                  <- template Vite, nao usado no runtime atual
 |   |-- index.css
+|   |-- assets/
 |   |-- styles/
 |   |   `-- sprint-ia.css
 |   `-- components/
@@ -152,6 +156,9 @@ sprint-ia/
 |           `-- syncProgress.js
 |-- sprint_ia_v13_final.jsx      <- container principal real
 |-- INSTRUCTIONS.md
+|-- setup-notion.js              <- utilitario auxiliar
+|-- fix-notion.js                <- utilitario auxiliar
+|-- notion_api_setup.md          <- documentacao auxiliar
 |-- package.json
 `-- vite.config.js
 ```
@@ -185,30 +192,48 @@ sprint-ia/
 ### Direcao visual
 
 - Tema escuro
-- Linguagem SaaS premium / deep tech
-- Mais hierarquia visual do que decoracao
-- Superficies elegantes, contraste limpo e densidade controlada
+- Linguagem SaaS premium / executiva
+- Mais hierarquia visual, clareza operacional e foco do que decoracao
+- Superficies consistentes, contraste limpo e densidade controlada
+- Visual mais corporativo, com menos ornamento e mais comando
 
 ### Paleta base
 
 | Elemento | Valor |
 |---|---|
-| Fundo principal | `#0F172A` |
-| Sidebar / navegacao | `#0B1120` |
-| Acao primaria | gradiente azul/ciano |
+| Fundo principal | `#0A0F1E` |
+| Fundo superior | `#111827` |
+| Sidebar / navegacao | `#0A0F1E` |
+| Superficie principal | `#1E293B` |
+| Acao primaria | `#0EA5E9` |
+| Acao secundaria / sucesso | `#10B981` |
 | Sucesso | `#10B981` |
 | Aviso | `#F59E0B` |
 | Erro | `#EF4444` |
 | Texto principal | `#F8FAFC` |
-| Texto secundario | `#94A3B8` |
-| Texto terciario | `#64748B` |
+| Texto secundario | `#CBD5E1` |
+| Texto terciario | `#94A3B8` |
 | Borda padrao | `#334155` |
-| Borda sutil | `#1E293B` |
+| Radius padrao | `12px` |
 
 ### Tipografia
 
-- Titulos: `Outfit`
-- Corpo e UI tecnica: `IBM Plex Mono`
+- Shell atual: `Inter`
+- O shell principal nao usa mais `Outfit` / `IBM Plex Mono` como base visual
+
+### Tokens visuais recorrentes
+
+- Sombras sutis centralizadas em `--sia-shadow` e `--sia-shadow-soft`
+- Botoes com variantes reutilizaveis `primary`, `ghost` e `danger`
+- Hover e feedbacks visuais curtos, sem microanimacoes excessivas
+- Cards de conclusao do checklist com acento esmeralda e resumo do ciclo
+
+### Layout responsivo atual
+
+- `1100px`: grids e hero compactam em duas faixas mais densas
+- `800px`: hero e grupos de acoes passam a empilhar
+- `768px`: sidebar desktop e ocultada e a navegacao vira experiencia mobile
+- `640px`: cards, stats, checklist e modais passam a priorizar leitura vertical
 
 ### Estado visual atual do shell
 
@@ -219,12 +244,16 @@ Implementacoes recentes ja incorporadas:
 - a acao de reset saiu do topo e foi movida para o rodape da sidebar
 - checklist do dia com estado de conclusao premium e CTA de continuidade
 - fluxo de ciclos no checklist para repetir rodadas ate concluir as aulas da formacao
+- cards de KPI maiores, com hover discreto e leitura mais clara
+- superficies mais planas e consistentes em roadmap, kanban, modais e checklist
 
 ### Regras visuais
 
-- Cards com gradiente escuro, borda suave e sombra discreta
+- Cards com base slate escura, borda `#334155` e sombra curta
 - Evitar excesso de altura vertical no topo
+- O hero superior deve permanecer compacto e orientado a foco
 - Reaproveitar componentes visuais antes de criar novos
+- Evitar tomar `src/App.css` e `src/index.css` como referencia do produto
 - Melhorar hierarquia sem aumentar ruído
 
 ---
@@ -335,7 +364,8 @@ Implementacoes recentes ja incorporadas:
 |---|---|
 | Sidebar fixa | Implementado |
 | Hero superior com foco do dia | Implementado |
-| Header mais compacto e orientado | Parcialmente implementado |
+| Header mais compacto e orientado | Implementado |
+| Checklist com ciclos e estado premium de conclusao | Implementado |
 | Editar roadmap | Planejado |
 | Gerenciar fases | Planejado |
 
@@ -392,8 +422,10 @@ Implementacoes recentes ja incorporadas:
   - componentes em `src/components/sprint-ia`
   - estilos em `src/styles/sprint-ia.css`
 - Se houver divergencia entre `src/App.jsx` e o runtime real, considerar `src/main.jsx` como fonte de verdade
+- `src/App.jsx`, `src/App.css` e `src/index.css` nao devem orientar decisoes de produto sem confirmar o runtime real
+- utilitarios e documentos do Notion nao devem orientar decisoes do frontend principal
 - Atualize este documento sempre que a arquitetura ou o fluxo principal mudarem
 
 ---
 
-*INSTRUCTIONS.md v1.2 - Sprint IA - Solaris Energia*
+*INSTRUCTIONS.md v1.3 - Sprint IA - Solaris Energia*
