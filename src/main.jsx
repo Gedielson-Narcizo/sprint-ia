@@ -5,10 +5,14 @@ import Login from "./components/Login.jsx";
 import { supabase } from "./lib/supabase.js";
 import "./styles/sprint-ia.css";
 
+const missingConfig = !supabase;
+
 function Root() {
   const [session, setSession] = useState(undefined); // undefined = carregando
 
   useEffect(() => {
+    if (missingConfig) return;
+
     // Sessão ativa ao carregar
     supabase.auth.getSession().then(({ data }) => {
       setSession(data.session ?? null);
@@ -21,6 +25,16 @@ function Root() {
 
     return () => subscription.unsubscribe();
   }, []);
+
+  // Configuração ausente
+  if (missingConfig) {
+    return (
+      <div style={{ minHeight: "100vh", background: "#0a0f1e", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: "12px", color: "#ef4444", fontFamily: "'Inter', system-ui, sans-serif", fontSize: "13px", padding: "24px", textAlign: "center" }}>
+        <strong>Configuração incompleta</strong>
+        <span style={{ color: "#94a3b8" }}>As variáveis VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY não estão definidas.<br />Adicione-as nas variáveis de ambiente da Vercel e faça um novo deploy.</span>
+      </div>
+    );
+  }
 
   // Aguarda verificação inicial da sessão
   if (session === undefined) {

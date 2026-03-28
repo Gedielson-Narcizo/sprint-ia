@@ -4,7 +4,10 @@ const url = import.meta.env.VITE_SUPABASE_URL;
 const key = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 if (!url || !key) {
-  throw new Error("Supabase: defina VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY no .env.local");
+  console.error(
+    "[Sprint IA] Variáveis VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY não encontradas.\n" +
+    "Configure-as no .env.local (local) e nas variáveis de ambiente da Vercel (produção)."
+  );
 }
 
-export const supabase = createClient(url, key);
+export const supabase = (url && key) ? createClient(url, key) : null;
