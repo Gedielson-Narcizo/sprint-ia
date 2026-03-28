@@ -42,7 +42,7 @@ function Root() {
 
   if (!session) return <Login />;
 
-  return <SprintIA onLogout={() => supabase.auth.signOut()} />;
+  return <SprintIA userId={session.user.id} onLogout={() => supabase.auth.signOut()} />;
 }
 
 ReactDOM.createRoot(document.getElementById("root")).render(

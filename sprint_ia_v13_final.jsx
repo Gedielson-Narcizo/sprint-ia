@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import "./src/styles/sprint-ia.css";
 import CardDetail from "./src/components/sprint-ia/CardDetail.jsx";
 import HeaderBar from "./src/components/sprint-ia/HeaderBar.jsx";
@@ -9,6 +9,7 @@ import StatsView from "./src/components/sprint-ia/StatsView.jsx";
 import TodayView from "./src/components/sprint-ia/TodayView.jsx";
 import { syncProgressState } from "./src/components/sprint-ia/syncProgress.js";
 import { Ic, StatCard } from "./src/components/sprint-ia/ui.jsx";
+import { loadState, saveState } from "./src/lib/db.js";
 
 const PHASES_INIT = [
   { id: "fundacao", name: "Fundação", color: "#10B981", weeks: [{ week: 1, formation: "Engenharia de Prompt", totalLessons: 11, completedLessons: 0, delivery: "Biblioteca pessoal de prompts para Solaris (Notion)", deliveryDone: false, status: "active", dailyTarget: 2, notes: "" }, { week: 2, formation: "ChatGPT", totalLessons: 10, completedLessons: 0, delivery: "1 caso de uso real aplicado na Solaris com ChatGPT", deliveryDone: false, status: "locked", dailyTarget: 2, notes: "" }] },
@@ -31,15 +32,14 @@ function makeInit() {
   return { phases: JSON.parse(JSON.stringify(PHASES_INIT)), startDate: "2026-03-30", dailyLog: {}, dailyChecklist: {}, dayCompleted: {}, lessonsAddedPerDay: {}, cycleLessonsAddedPerDay: {}, annotations: [], kanbanCards: cards, kanbanIdCounter: cid };
 }
 
-const SK = "sprint-ia-v13";
-const load = () => { try { const raw = localStorage.getItem(SK); if (raw) { const data = JSON.parse(raw); if (!data.annotations) data.annotations = []; if (!data.lessonsAddedPerDay) data.lessonsAddedPerDay = {}; if (!data.cycleLessonsAddedPerDay) data.cycleLessonsAddedPerDay = {}; if (!data.dayCompleted) data.dayCompleted = {}; return data; } } catch {} return makeInit(); };
-const save = (data) => { try { localStorage.setItem(SK, JSON.stringify(data)); } catch {} };
+// localStorage mantido apenas como cache offline (gerenciado em src/lib/db.js)
 const td = () => new Date().toISOString().slice(0, 10);
 const now = () => new Date().toISOString();
 const uid = () => Math.random().toString(36).slice(2, 10);
 
-export default function SprintIA({ onLogout }) {
-  const [data, setData] = useState(load);
+export default function SprintIA({ onLogout, userId }) {
+  const [data, setData] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [tab, setTab] = useState("roadmap");
   const [showNewCard, setShowNewCard] = useState(false);
   const [showReset, setShowReset] = useState(false);
@@ -51,7 +51,31 @@ export default function SprintIA({ onLogout }) {
   const [confirmLesson, setConfirmLesson] = useState(false);
   const [noteTargetType, setNoteTargetType] = useState("formation");
 
-  useEffect(() => { save(data); }, [data]);
+  // Carrega dados ao montar (Supabase → localStorage → makeInit)
+  useEffect(() => {
+    loadState(userId).then((loaded) => {
+      setData(loaded ?? makeInit());
+      setIsLoading(false);
+    });
+  }, [userId]);
+
+  // Salva no Supabase com debounce de 1.5s para evitar excesso de chamadas
+  const saveTimer = useRef(null);
+  useEffect(() => {
+    if (isLoading || !data) return;
+    clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(() => saveState(userId, data), 1500);
+    return () => clearTimeout(saveTimer.current);
+  }, [data, userId, isLoading]);
+
+  // Tela de loading enquanto busca do Supabase
+  if (isLoading || !data) {
+    return (
+      <div style={{ minHeight: "100vh", background: "#0a0f1e", display: "flex", alignItems: "center", justifyContent: "center", color: "#94a3b8", fontFamily: "'Inter', system-ui, sans-serif", fontSize: "13px" }}>
+        Carregando dados...
+      </div>
+    );
+  }
 
   const allWeeks = useMemo(() => data.phases.flatMap((phase) => phase.weeks), [data.phases]);
   const allFormations = useMemo(() => allWeeks.map((week) => week.formation), [allWeeks]);
