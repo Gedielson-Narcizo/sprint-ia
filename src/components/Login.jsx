@@ -1,20 +1,64 @@
 import { useState } from "react";
 import { supabase } from "../lib/supabase.js";
 
+function translateError(msg) {
+  if (msg.includes("Invalid login credentials")) return "E-mail ou senha incorretos.";
+  if (msg.includes("Email not confirmed")) return "Confirme seu e-mail antes de entrar.";
+  if (msg.includes("User already registered")) return "Este e-mail já possui uma conta.";
+  if (msg.includes("Password should be at least")) return "A senha deve ter pelo menos 6 caracteres.";
+  if (msg.includes("rate limit")) return "Muitas tentativas. Aguarde alguns minutos.";
+  return msg;
+}
+
 export default function Login() {
+  const [mode, setMode] = useState("login"); // "login" | "signup"
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const switchMode = (next) => {
+    setMode(next);
+    setEmail("");
+    setPassword("");
+    setConfirm("");
+    setError("");
+    setSuccess("");
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-    setLoading(true);
-    const { error: err } = await supabase.auth.signInWithPassword({ email, password });
-    if (err) setError(err.message);
-    setLoading(false);
+    setSuccess("");
+
+    if (mode === "signup") {
+      if (password.length < 6) {
+        setError("A senha deve ter pelo menos 6 caracteres.");
+        return;
+      }
+      if (password !== confirm) {
+        setError("As senhas não coincidem.");
+        return;
+      }
+      setLoading(true);
+      const { error: err } = await supabase.auth.signUp({ email, password });
+      setLoading(false);
+      if (err) { setError(translateError(err.message)); return; }
+      // Se confirmação de e-mail estiver ativa → mensagem de sucesso
+      // Se não estiver → onAuthStateChange em main.jsx faz o redirecionamento automaticamente
+      setSuccess("Conta criada! Verifique sua caixa de entrada para confirmar o e-mail.");
+    } else {
+      setLoading(true);
+      const { error: err } = await supabase.auth.signInWithPassword({ email, password });
+      setLoading(false);
+      if (err) setError(translateError(err.message));
+      // login bem-sucedido: onAuthStateChange em main.jsx cuida do redirecionamento
+    }
   };
+
+  const isSignup = mode === "signup";
 
   return (
     <div style={styles.backdrop}>
@@ -24,8 +68,12 @@ export default function Login() {
           <div style={styles.brandSub}>GEDIELSON · SOLARIS · VIVER DE IA</div>
         </div>
 
-        <h2 style={styles.heading}>Acesso ao painel</h2>
-        <p style={styles.sub}>Entre com seu e-mail e senha para continuar.</p>
+        <h2 style={styles.heading}>{isSignup ? "Criar conta" : "Acesso ao painel"}</h2>
+        <p style={styles.sub}>
+          {isSignup
+            ? "Preencha os dados abaixo para criar sua conta."
+            : "Entre com seu e-mail e senha para continuar."}
+        </p>
 
         <form onSubmit={handleSubmit} style={styles.form}>
           <div style={styles.field}>
@@ -48,18 +96,54 @@ export default function Login() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              autoComplete="current-password"
+              autoComplete={isSignup ? "new-password" : "current-password"}
               style={styles.input}
               placeholder="••••••••"
             />
           </div>
 
+          {isSignup && (
+            <div style={styles.field}>
+              <label style={styles.label}>Confirmar senha</label>
+              <input
+                type="password"
+                value={confirm}
+                onChange={(e) => setConfirm(e.target.value)}
+                required
+                autoComplete="new-password"
+                style={styles.input}
+                placeholder="••••••••"
+              />
+            </div>
+          )}
+
           {error ? <div style={styles.error}>{error}</div> : null}
+          {success ? <div style={styles.successBox}>{success}</div> : null}
 
           <button type="submit" disabled={loading} style={styles.btn}>
-            {loading ? "Entrando..." : "Entrar"}
+            {loading
+              ? isSignup ? "Criando conta..." : "Entrando..."
+              : isSignup ? "Criar conta" : "Entrar"}
           </button>
         </form>
+
+        <div style={styles.switchRow}>
+          {isSignup ? (
+            <>
+              Já tem conta?{" "}
+              <button style={styles.switchBtn} onClick={() => switchMode("login")}>
+                Entrar
+              </button>
+            </>
+          ) : (
+            <>
+              Não tem conta?{" "}
+              <button style={styles.switchBtn} onClick={() => switchMode("signup")}>
+                Criar conta
+              </button>
+            </>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -153,6 +237,14 @@ const styles = {
     fontSize: "13px",
     color: "#fca5a5",
   },
+  successBox: {
+    padding: "10px 14px",
+    background: "rgba(16,185,129,0.1)",
+    border: "1px solid rgba(16,185,129,0.3)",
+    borderRadius: "8px",
+    fontSize: "13px",
+    color: "#6ee7b7",
+  },
   btn: {
     marginTop: "4px",
     padding: "11px 20px",
@@ -165,5 +257,23 @@ const styles = {
     fontFamily: "'Inter', system-ui, sans-serif",
     cursor: "pointer",
     transition: "background 0.15s",
+  },
+  switchRow: {
+    marginTop: "24px",
+    textAlign: "center",
+    fontSize: "13px",
+    color: "#64748b",
+  },
+  switchBtn: {
+    background: "none",
+    border: "none",
+    color: "#0ea5e9",
+    fontSize: "13px",
+    fontWeight: 600,
+    fontFamily: "'Inter', system-ui, sans-serif",
+    cursor: "pointer",
+    padding: 0,
+    textDecoration: "underline",
+    textUnderlineOffset: "2px",
   },
 };
