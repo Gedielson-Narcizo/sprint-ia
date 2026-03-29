@@ -64,8 +64,7 @@ export default function Login() {
     <div style={styles.backdrop}>
       <div style={styles.card}>
         <div style={styles.brand}>
-          <div style={styles.brandTitle}>Solaris <strong style={styles.brandAccent}>Sprint IA</strong></div>
-          <div style={styles.brandSub}>GEDIELSON · SOLARIS · VIVER DE IA</div>
+          <div style={styles.brandTitle}><strong style={styles.brandAccent}>Cognia</strong></div>
         </div>
 
         <h2 style={styles.heading}>{isSignup ? "Criar conta" : "Acesso ao painel"}</h2>

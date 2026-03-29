@@ -32,9 +32,8 @@ export default function Sidebar({ tab, setTab, streak, todayLogged, showReset, s
     <aside className="sia-sidebar">
       <div className="sia-sidebar__brand">
         <h1 className="sia-sidebar__title">
-          Solaris <strong>Sprint IA</strong>
+          <strong>Cognia</strong>
         </h1>
-        <div className="sia-sidebar__subtitle">GEDIELSON · SOLARIS · v1.3</div>
       </div>
 
       {streak > 0 || todayLogged ? (
@@ -86,7 +85,7 @@ export default function Sidebar({ tab, setTab, streak, todayLogged, showReset, s
             <Ic.Logout /> Sair
           </Btn>
         ) : null}
-        <span>Sprint IA · Solaris Energia</span>
+        <span>Cognia</span>
       </div>
     </aside>
   );

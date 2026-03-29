@@ -12,7 +12,7 @@
 **Produto:** Dashboard de governanca de capacitacao em IA
 **Usuario:** Gedielson - Head de Dados & IA na Solaris Energia
 **Contexto:** Aluno da plataforma Viver de IA, precisa concluir formacoes com entregas visiveis ao CEO
-**Stack:** React + Vite + JavaScript + Vercel
+**Stack:** React + Vite + JavaScript + Supabase + Vercel
 
 O dashboard controla:
 - Progresso em formacoes organizadas por fases
@@ -91,10 +91,11 @@ O dashboard controla:
 
 ### Storage
 
-- **Chave localStorage atual:** `sprint-ia-v13`
-- **Nao alterar a chave** em mudancas visuais ou refatoracoes sem quebra
-- **So incrementar a chave** quando houver mudanca breaking no shape do estado salvo
-- **Migracoes** devem continuar sendo tratadas em `load()`
+- **Persistencia principal:** Supabase (tabela `sprint_ia_state`, campo `data` JSONB por `user_id`)
+- **Cache local:** localStorage com chave `sprint-ia-v13` — mantido como fallback offline
+- **Migracao automatica:** no primeiro login, se Supabase nao tiver dados mas localStorage tiver, os dados sao migrados automaticamente para o banco
+- **Nao alterar a chave do localStorage** sem necessidade — ela e usada apenas como cache e migracao
+- **Migracoes de shape** devem ser tratadas na funcao `applyMigrations()` em `src/lib/db.js`
 
 ### Campos de ciclo diario
 
@@ -114,36 +115,33 @@ O dashboard controla:
 
 ### Runtime real do app
 
-Hoje o app roda assim:
-
 ```txt
-src/main.jsx -> ../sprint_ia_v13_final.jsx
+src/main.jsx -> Root (auth) -> Login | sprint_ia_v13_final.jsx
 ```
 
-Observacoes importantes:
-- `src/App.jsx` existe, mas e apenas o template padrao do Vite e **nao** e a tela principal em uso
-- `src/App.css`, `src/index.css`, `src/assets/*` e parte de `public/*` pertencem ao template/base do projeto e nao definem o shell principal do dashboard
-- o container principal do dashboard esta em `sprint_ia_v13_final.jsx`
-- a UI foi refatorada para componentes em `src/components/sprint-ia`
-- os estilos principais vivem em `src/styles/sprint-ia.css`
-- os arquivos `setup-notion.js`, `fix-notion.js` e `notion_api_setup.md` sao auxiliares e nao participam do runtime do frontend
+- `src/App.jsx` existe mas e apenas o template padrao do Vite — nao e usado
+- O fluxo de autenticacao vive em `src/main.jsx` (componente `Root`)
+- O container principal do dashboard esta em `sprint_ia_v13_final.jsx`
+- Estilos principais em `src/styles/sprint-ia.css`
 
 ### Estrutura atual relevante
 
 ```txt
 sprint-ia/
 |-- src/
-|   |-- main.jsx
-|   |-- App.jsx                  <- template Vite, nao usado no runtime atual
-|   |-- App.css                  <- template Vite, nao usado no runtime atual
+|   |-- main.jsx                 <- entry point + auth wrapper (Root)
+|   |-- App.jsx                  <- template Vite, nao usado
 |   |-- index.css
-|   |-- assets/
 |   |-- styles/
-|   |   `-- sprint-ia.css
+|   |   `-- sprint-ia.css        <- estilos principais
+|   |-- lib/
+|   |   |-- supabase.js          <- client Supabase (usa VITE_SUPABASE_URL/ANON_KEY)
+|   |   `-- db.js                <- loadState / saveState / applyMigrations
 |   `-- components/
+|       |-- Login.jsx            <- tela de login (e-mail + senha)
 |       `-- sprint-ia/
 |           |-- HeaderBar.jsx
-|           |-- Sidebar.jsx
+|           |-- Sidebar.jsx      <- navegacao lateral + logout
 |           |-- RoadmapView.jsx
 |           |-- TodayView.jsx
 |           |-- KanbanView.jsx
@@ -154,36 +152,44 @@ sprint-ia/
 |           |-- NewCardForm.jsx
 |           |-- ui.jsx
 |           `-- syncProgress.js
-|-- sprint_ia_v13_final.jsx      <- container principal real
+|-- sprint_ia_v13_final.jsx      <- container principal (recebe userId, onLogout)
+|-- vercel.json                  <- build config + cache headers + SPA rewrites
+|-- .env.local                   <- vars locais (nao commitado)
 |-- INSTRUCTIONS.md
-|-- setup-notion.js              <- utilitario auxiliar
-|-- fix-notion.js                <- utilitario auxiliar
-|-- notion_api_setup.md          <- documentacao auxiliar
 |-- package.json
 `-- vite.config.js
 ```
 
 ### Responsabilidades
 
+- `src/main.jsx`
+  - verifica sessao Supabase ao carregar
+  - renderiza `Login` se nao autenticado
+  - renderiza `SprintIA` com `userId` e `onLogout` se autenticado
+- `src/lib/supabase.js`
+  - inicializa o client Supabase a partir das env vars
+  - exporta `supabase` (ou `null` se vars ausentes)
+- `src/lib/db.js`
+  - `loadState(userId)`: busca no Supabase → fallback localStorage → retorna null
+  - `saveState(userId, data)`: upsert no Supabase + cache localStorage
+  - `applyMigrations(d)`: garante campos novos em dados antigos
+- `src/components/Login.jsx`
+  - formulario de login com e-mail e senha
+  - chama `supabase.auth.signInWithPassword`
 - `sprint_ia_v13_final.jsx`
-  - state principal
-  - persistencia
-  - callbacks de negocio
-  - composicao das views
+  - recebe `userId` e `onLogout` como props
+  - inicia com `makeInit()` e substitui pelos dados do Supabase via `useRef` (sem bloquear render)
+  - salva no Supabase com debounce de 1.5s apos inicializacao
 - `syncProgress.js`
   - sincronizacao de desbloqueio sequencial
   - auto-move de cards do kanban
 - `ui.jsx`
-  - icones inline
+  - icones inline (incluindo `Ic.Logout`)
   - primitives visuais compartilhadas
 - `HeaderBar.jsx`
-  - topo principal
-  - hero superior
-  - foco do dia
-  - confirmacao visual de reset
+  - topo principal, hero superior, foco do dia
 - `Sidebar.jsx`
-  - navegacao lateral
-  - acesso ao reset pelo rodape
+  - navegacao lateral, reset no rodape, botao de logout
 
 ---
 
@@ -346,13 +352,45 @@ Implementacoes recentes ja incorporadas:
   - larguras de progresso
   - estados pontuais
 
+### Autenticacao e variaveis de ambiente
+
+- Autenticacao via Supabase Auth (e-mail + senha)
+- Variaveis necessarias (locais em `.env.local`, producao na Vercel):
+  - `VITE_SUPABASE_URL`
+  - `VITE_SUPABASE_ANON_KEY`
+- Variaveis sao embutidas no bundle pelo Vite em tempo de build
+- Se ausentes: app exibe mensagem de erro (nao trava com tela branca)
+- Supabase RLS ativo: cada usuario acessa apenas seus proprios dados
+
+### Supabase — estrutura do banco
+
+```sql
+CREATE TABLE sprint_ia_state (
+  user_id    UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  data       JSONB NOT NULL,
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+ALTER TABLE sprint_ia_state ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "user_own_state" ON sprint_ia_state
+  FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+```
+
+### Deploy
+
+- Plataforma: Vercel (Hobby)
+- URL producao: `https://sprint-ia-omega.vercel.app`
+- Deploy via CLI: `npx vercel --prod`
+- Auto-deploy via GitHub: webhook ativo (push para `main` dispara deploy)
+- `vercel.json` configura: build com `npx vite build`, cache headers, SPA rewrites
+
 ### Edicoes de produto
 
 - Nao alterar:
   - regras de desbloqueio
   - shape do state
-  - chave do localStorage
+  - chave do localStorage (usada como cache)
 - Mudancas de UI devem ser isoladas da logica
+- Ao mudar o shape do estado, atualizar `applyMigrations()` em `src/lib/db.js`
 
 ---
 
@@ -366,6 +404,9 @@ Implementacoes recentes ja incorporadas:
 | Hero superior com foco do dia | Implementado |
 | Header mais compacto e orientado | Implementado |
 | Checklist com ciclos e estado premium de conclusao | Implementado |
+| Autenticacao Supabase (login/logout/sessao) | Implementado |
+| Persistencia Supabase por usuario | Implementado |
+| Deploy na Vercel com CI via GitHub | Implementado |
 | Editar roadmap | Planejado |
 | Gerenciar fases | Planejado |
 
@@ -410,8 +451,8 @@ Implementacoes recentes ja incorporadas:
 
 ### Estado atual
 
-- Ultima release organizada para remoto: `v1.5.0`
-- A chave de storage continua `sprint-ia-v13`
+- Ultima release: `v1.6.0` (auth + persistencia Supabase)
+- A chave de storage local continua `sprint-ia-v13` (cache/migracao)
 
 ---
 
@@ -428,4 +469,4 @@ Implementacoes recentes ja incorporadas:
 
 ---
 
-*INSTRUCTIONS.md v1.3 - Sprint IA - Solaris Energia*
+*INSTRUCTIONS.md v1.4 - Sprint IA - Solaris Energia*

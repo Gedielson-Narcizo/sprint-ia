@@ -37,7 +37,7 @@ const td = () => new Date().toISOString().slice(0, 10);
 const now = () => new Date().toISOString();
 const uid = () => Math.random().toString(36).slice(2, 10);
 
-export default function SprintIA({ onLogout, userId }) {
+export default function SprintIA({ onLogout, userId, userName }) {
   const [data, setData] = useState(makeInit); // estado válido desde o início
   const [tab, setTab] = useState("roadmap");
   const [showNewCard, setShowNewCard] = useState(false);
@@ -223,6 +223,7 @@ export default function SprintIA({ onLogout, userId }) {
         overallPct={overallPct}
         showReset={showReset}
         setShowReset={setShowReset}
+        userName={userName}
         resetAll={() => {
             setData(makeInit());
             setShowReset(false);

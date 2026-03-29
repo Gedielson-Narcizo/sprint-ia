@@ -1,5 +1,12 @@
 import { Btn, Ic, Pill } from "./ui.jsx";
 
+function getGreeting() {
+  const h = new Date().getHours();
+  if (h < 12) return "Bom dia";
+  if (h < 18) return "Boa tarde";
+  return "Boa noite";
+}
+
 export default function HeaderBar({
   streak,
   todayLogged,
@@ -12,6 +19,7 @@ export default function HeaderBar({
   tabs,
   tab,
   setTab,
+  userName,
 }) {
   const sprintMoment = activeWeek
     ? `Semana ${activeWeek.week} em andamento · ${activeWeek.formation}`
@@ -31,9 +39,8 @@ export default function HeaderBar({
         <div className="sia-header__top">
           <div className="sia-brand">
             <h1 className="sia-brand__title">
-              Solaris <strong>Sprint IA</strong>
+              <strong>Cognia</strong>
             </h1>
-            <div className="sia-brand__subtitle">GEDIELSON · SOLARIS · VIVER DE IA · v1.3</div>
           </div>
 
           <div className="sia-header__actions">
@@ -55,7 +62,7 @@ export default function HeaderBar({
         <section className="sia-top-hero surface-card">
           <div className="sia-top-hero__context">
             <div className="sia-top-hero__eyebrow">Painel de comando</div>
-            <h2 className="sia-top-hero__title">Bom trabalho, Gedielson.</h2>
+            <h2 className="sia-top-hero__title">{getGreeting()}, {userName}.</h2>
             <p className="sia-top-hero__subtitle">
               Acompanhe o sprint com clareza, mantenha o foco do dia visível e avance com consistência.
             </p>
