@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import ReactDOM from "react-dom/client";
 import SprintIA from "../sprint_ia_v13_final.jsx";
 import Login from "./components/Login.jsx";
+import NamePrompt from "./components/NamePrompt.jsx";
 import { supabase } from "./lib/supabase.js";
 import "./styles/sprint-ia.css";
 
@@ -62,6 +63,10 @@ function Root() {
     user.user_metadata?.full_name ||
     user.email?.split("@")[0] ||
     "Usuário";
+
+  // Usuário sem nome definido → exibe prompt antes de entrar no app
+  const hasName = !!(user.user_metadata?.name || user.user_metadata?.full_name);
+  if (!hasName) return <NamePrompt />;
 
   return <SprintIA userId={user.id} userName={userName} onLogout={() => supabase.auth.signOut()} />;
 }

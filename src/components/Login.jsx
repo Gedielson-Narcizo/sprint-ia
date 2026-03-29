@@ -12,6 +12,7 @@ function translateError(msg) {
 
 export default function Login() {
   const [mode, setMode] = useState("login"); // "login" | "signup"
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
@@ -21,6 +22,7 @@ export default function Login() {
 
   const switchMode = (next) => {
     setMode(next);
+    setName("");
     setEmail("");
     setPassword("");
     setConfirm("");
@@ -34,6 +36,10 @@ export default function Login() {
     setSuccess("");
 
     if (mode === "signup") {
+      if (!name.trim()) {
+        setError("Informe como deseja ser chamado.");
+        return;
+      }
       if (password.length < 6) {
         setError("A senha deve ter pelo menos 6 caracteres.");
         return;
@@ -43,7 +49,11 @@ export default function Login() {
         return;
       }
       setLoading(true);
-      const { error: err } = await supabase.auth.signUp({ email, password });
+      const { error: err } = await supabase.auth.signUp({
+        email,
+        password,
+        options: { data: { name: name.trim() } },
+      });
       setLoading(false);
       if (err) { setError(translateError(err.message)); return; }
       // Se confirmação de e-mail estiver ativa → mensagem de sucesso
@@ -75,6 +85,21 @@ export default function Login() {
         </p>
 
         <form onSubmit={handleSubmit} style={styles.form}>
+          {isSignup && (
+            <div style={styles.field}>
+              <label style={styles.label}>Como deseja ser chamado?</label>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+                autoComplete="given-name"
+                style={styles.input}
+                placeholder="Ex: Gedielson"
+              />
+            </div>
+          )}
+
           <div style={styles.field}>
             <label style={styles.label}>E-mail</label>
             <input
