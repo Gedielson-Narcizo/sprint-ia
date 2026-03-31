@@ -11,6 +11,7 @@ import { syncProgressState } from "./src/components/sprint-ia/syncProgress.js";
 import { Ic, StatCard } from "./src/components/sprint-ia/ui.jsx";
 import { loadState, saveState } from "./src/lib/db.js";
 import ProgramsView from "./src/components/programs/ProgramsView.jsx";
+import DashboardView from "./src/components/programs/DashboardView.jsx";
 
 const PHASES_INIT = [
   { id: "fundacao", name: "Fundação", color: "#10B981", weeks: [{ week: 1, formation: "Engenharia de Prompt", totalLessons: 11, completedLessons: 0, delivery: "Biblioteca pessoal de prompts para Solaris (Notion)", deliveryDone: false, status: "active", dailyTarget: 2, notes: "" }, { week: 2, formation: "ChatGPT", totalLessons: 10, completedLessons: 0, delivery: "1 caso de uso real aplicado na Solaris com ChatGPT", deliveryDone: false, status: "locked", dailyTarget: 2, notes: "" }] },
@@ -40,7 +41,7 @@ const uid = () => Math.random().toString(36).slice(2, 10);
 
 export default function SprintIA({ onLogout, userId, userName }) {
   const [data, setData] = useState(makeInit); // estado válido desde o início
-  const [tab, setTab] = useState("roadmap");
+  const [tab, setTab] = useState("dashboard");
   const [showNewCard, setShowNewCard] = useState(false);
   const [showReset, setShowReset] = useState(false);
   const [selectedCard, setSelectedCard] = useState(null);
@@ -302,6 +303,7 @@ export default function SprintIA({ onLogout, userId, userName }) {
         ) : null}
         {tab === "stats" ? <StatsView phases={data.phases} annotations={data.annotations} dailyLog={data.dailyLog} avgPD={avgPD} allWeeks={allWeeks} /> : null}
         {tab === "programs" ? <ProgramsView userId={userId} /> : null}
+        {tab === "dashboard" ? <DashboardView userId={userId} userName={userName} onNavigate={setTab} /> : null}
 
         <footer className="sia-footnote">
           <span>

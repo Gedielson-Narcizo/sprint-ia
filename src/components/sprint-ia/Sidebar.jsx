@@ -4,6 +4,7 @@ const SECTIONS = [
   {
     label: "Uso diário",
     items: [
+      { id: "dashboard", label: "Dashboard", icon: <Ic.Trophy /> },
       { id: "programs", label: "Programas", icon: <Ic.Book /> },
       { id: "roadmap", label: "Roadmap", icon: <Ic.Chart /> },
       { id: "today", label: "Hoje", icon: <Ic.Calendar /> },

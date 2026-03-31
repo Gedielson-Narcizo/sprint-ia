@@ -113,6 +113,29 @@ export async function deleteItem(id) {
 }
 
 /**
+ * Fetches all programs with module and item counts for the global dashboard.
+ * Returns clean program objects with `module_count` and `item_count` added.
+ * @returns {Promise<{data: Array|null, error: any}>}
+ */
+export async function getProgramsDashboardSummary(userId) {
+  const { data, error } = await supabase
+    .from("study_programs")
+    .select("*, program_modules(id, program_items(id))")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false });
+  if (error) return { data: null, error };
+  const processed = (data || []).map((p) => {
+    const modules = p.program_modules || [];
+    const module_count = modules.length;
+    const item_count = modules.reduce((sum, m) => sum + (m.program_items?.length || 0), 0);
+    // eslint-disable-next-line no-unused-vars
+    const { program_modules: _, ...rest } = p;
+    return { ...rest, module_count, item_count };
+  });
+  return { data: processed, error: null };
+}
+
+/**
  * Loads all modules with their items for a program, sorted by sort_order.
  * @returns {Promise<{data: Array|null, error: any}>}
  */
