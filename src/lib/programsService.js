@@ -77,3 +77,55 @@ export async function createItem(moduleId, fields) {
     .single();
   return { data, error };
 }
+
+/** @returns {Promise<{data: import('../types/programs.js').ProgramModule|null, error: any}>} */
+export async function updateModule(id, fields) {
+  const { data, error } = await supabase
+    .from("program_modules")
+    .update({ ...fields, updated_at: new Date().toISOString() })
+    .eq("id", id)
+    .select()
+    .single();
+  return { data, error };
+}
+
+/** @returns {Promise<{error: any}>} */
+export async function deleteModule(id) {
+  const { error } = await supabase.from("program_modules").delete().eq("id", id);
+  return { error };
+}
+
+/** @returns {Promise<{data: import('../types/programs.js').ProgramItem|null, error: any}>} */
+export async function updateItem(id, fields) {
+  const { data, error } = await supabase
+    .from("program_items")
+    .update({ ...fields, updated_at: new Date().toISOString() })
+    .eq("id", id)
+    .select()
+    .single();
+  return { data, error };
+}
+
+/** @returns {Promise<{error: any}>} */
+export async function deleteItem(id) {
+  const { error } = await supabase.from("program_items").delete().eq("id", id);
+  return { error };
+}
+
+/**
+ * Loads all modules with their items for a program, sorted by sort_order.
+ * @returns {Promise<{data: Array|null, error: any}>}
+ */
+export async function getProgramRoadmap(programId) {
+  const { data, error } = await supabase
+    .from("program_modules")
+    .select("*, program_items(*)")
+    .eq("program_id", programId)
+    .order("sort_order", { ascending: true });
+  if (data) {
+    data.forEach((m) => {
+      m.program_items = (m.program_items || []).sort((a, b) => a.sort_order - b.sort_order);
+    });
+  }
+  return { data, error };
+}
