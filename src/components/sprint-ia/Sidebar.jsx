@@ -4,6 +4,7 @@ const SECTIONS = [
   {
     label: "Uso diário",
     items: [
+      { id: "programs", label: "Programas", icon: <Ic.Book /> },
       { id: "roadmap", label: "Roadmap", icon: <Ic.Chart /> },
       { id: "today", label: "Hoje", icon: <Ic.Calendar /> },
       { id: "kanban", label: "Kanban", icon: <Ic.Kanban /> },
